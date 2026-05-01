@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "$IMGN — Community Token & AI Image Generator",
-  description: "Generate AI images in any genre. Community token. Not financial advice.",
+  title: "MSPAINTIFY — Token, Generate paint like images with AI",
+  description: "Generate Paint-like AI images . Community token.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
