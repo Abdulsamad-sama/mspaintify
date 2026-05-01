@@ -2,12 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import { FaXTwitter, FaThreads, FaMoon, FaSun } from "react-icons/fa6";
+import { FiUpload } from "react-icons/fi";
 
 
 
 const PARTICLES = Array.from({ length: 30 }, (_, i) => i);
 
 export default function Home() {
+  const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,16 @@ export default function Home() {
   const cardBg = isDark ? "rgba(255,255,255,0.05)" : "rgba(15,23,42,0.88)";
   const cardBorder = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)";
   const scanlineColor = isDark ? "rgba(0,0,0,0.15)" : "rgba(255,255,255,0.12)";
+
+  function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      setError("Only image files are allowed");
+      return;
+    }
+
+    setFile(file);
+    setError(null);
+  }
 
   async function generate() {
     if (!file) return;
@@ -224,40 +236,58 @@ export default function Home() {
 
             {/* Prompt input */}
             <div className="mb-5">
-              <label className="block font-mono text-xs text-white/40 uppercase tracking-widest mb-2">
+              <label className="block font-mono text-xs text-white/40 uppercase tracking-widest mb-3">
                 Upload Image
               </label>
 
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const selected = e.target.files?.[0];
-                  if (!selected) return;
-
-                  if (!selected.type.startsWith("image/")) {
-                    setError("Only image files are allowed");
-                    return;
-                  }
-
-                  setFile(selected);
-                  setError(null);
+              <label
+                className="relative flex flex-col items-center justify-center w-full h-48 rounded-2xl gap-2 border-2 border-dashed cursor-pointer transition-all group"
+                style={{
+                  borderColor: dragActive ? "#A855F7" : "rgba(255,255,255,0.15)",
+                  background: dragActive
+                    ? "rgba(168,85,247,0.08)"
+                    : "rgba(255,255,255,0.03)",
                 }}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 text-white font-mono text-sm p-4 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-yellow-400 file:text-black hover:file:bg-yellow-300"
-              />
+              >
+                {/* Hidden Input */}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) handleFile(file);
+                  }}
+                />
+
+                {/* Icon */}
+                <div
+                  className="mb-3 text-3xl transition-transform group-hover:scale-110"
+                  style={{ color: "#A855F7" }}
+                >
+                  <FiUpload />
+                </div>
+
+                {/* Text */}
+                <p className="font-mono text-sm text-purple-400">
+                  Click to upload
+                </p>
+
+                <p className="font-mono text-xs text-white/20 uppercase tracking-widest">
+                  drop · paste · click
+                </p>
+              </label>
+
+              {/* Preview */}
               {file && (
-                <div className="mt-3">
+                <div className="mt-4">
                   <img
                     src={URL.createObjectURL(file)}
                     alt="Preview"
-                    className="w-full max-h-40 object-contain rounded-lg border border-white/10"
+                    className="m-auto max-h-40 object-contain rounded-xl border border-white/10"
                   />
                 </div>
               )}
-
-              <p className="text-white/20 font-mono text-xs mt-1 text-right">
-                Paintify it
-              </p>
             </div>
 
             {/* Generate button */}
