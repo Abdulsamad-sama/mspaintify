@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { FaXTwitter, FaThreads, FaMoon, FaSun } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
 
@@ -9,13 +9,17 @@ import { FiUpload } from "react-icons/fi";
 const PARTICLES = Array.from({ length: 30 }, (_, i) => i);
 
 export default function Home() {
-  const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [glitch, setGlitch] = useState(false);
-  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [theme, setTheme] = useState<"dark" | "light">(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    return "dark"; // default fallback
+  });
   const [particles] = useState(() =>
     PARTICLES.map(i => ({
       size: Math.floor(Math.random() * 4 + 2),
@@ -30,10 +34,10 @@ export default function Home() {
 
   useEffect(() => {
     const media = window.matchMedia("(prefers-color-scheme: dark)");
-    setTheme(media.matches ? "dark" : "light");
-    const onChange = (event: MediaQueryListEvent) => setTheme(event.matches ? "dark" : "light");
-    media.addEventListener("change", onChange);
-    return () => media.removeEventListener("change", onChange);
+    const handleChange = (event: MediaQueryListEvent) => setTheme(event.matches ? "dark" : "light");
+
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
   }, []);
 
   useEffect(() => {
@@ -100,100 +104,132 @@ export default function Home() {
   }
 
   return (
-    <main className={`min-h-screen overflow-hidden relative ${isDark ? "bg-black text-white" : "bg-slate-100 text-slate-900"}`}>
-      {/* Animated grid background */}
-      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
-        <div className="absolute inset-0" style={{
-          backgroundImage: `linear-gradient(rgba(${isDark ? "255,220,0,0.07" : "0,0,0,0.06"}) 1px, transparent 1px), linear-gradient(90deg, rgba(${isDark ? "255,220,0,0.07" : "0,0,0,0.06"}) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
-          animation: "gridMove 12s linear infinite"
-        }} />
-        {particles.map((p, i) => (
-          <div key={i} className="absolute rounded-full" style={{
-            width: `${p.size}px`,
-            height: `${p.size}px`,
-            left: `${p.left}%`,
-            top: `${p.top}%`,
-            background: p.color,
-            animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite alternate`,
-            opacity: 0.6,
+    <>
+      {/* Skip to main content for accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-yellow-400 text-black px-4 py-2 rounded z-50"
+      >
+        Skip to main content
+      </a>
+
+      <main
+        id="main-content"
+        className={`min-h-screen overflow-hidden relative ${isDark ? "bg-black text-white" : "bg-slate-100 text-slate-900"}`}
+      >
+        {/* Animated grid background */}
+        <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }} aria-hidden="true">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `linear-gradient(rgba(${isDark ? "255,220,0,0.07" : "0,0,0,0.06"}) 1px, transparent 1px), linear-gradient(90deg, rgba(${isDark ? "255,220,0,0.07" : "0,0,0,0.06"}) 1px, transparent 1px)`,
+            backgroundSize: "60px 60px",
+            animation: "gridMove 12s linear infinite"
           }} />
-        ))}
-      </div>
-
-      {/* Scanlines overlay */}
-      <div className="fixed inset-0 pointer-events-none" style={{
-        backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${scanlineColor} 2px, ${scanlineColor} 4px)`,
-        zIndex: 1
-      }} />
-
-      <div className="relative z-10 flex flex-col items-center min-h-screen px-4 py-12">
-        <div className="w-full flex justify-end mb-4">
-          <button
-            onClick={() => setTheme(isDark ? "light" : "dark")}
-            className="px-4 py-2 rounded-full text-xs font-mono uppercase tracking-[0.3em] transition-all"
-            style={{
-              background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
-              color: isDark ? "#fff" : "#111",
-              border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)"}`
-            }}
-          >
-            {isDark ?
-              <span className="flex gap-3"><FaSun /> light</span> :
-              <span className="flex  gap-3 "><FaMoon /> dark</span>}
-          </button>
+          {particles.map((p, i) => (
+            <div key={i} className="absolute rounded-full" style={{
+              width: `${p.size}px`,
+              height: `${p.size}px`,
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              background: p.color,
+              animation: `float ${p.duration}s ease-in-out ${p.delay}s infinite alternate`,
+              opacity: 0.6,
+            }} />
+          ))}
         </div>
 
-        {/* Header */}
-        <div className="text-center mb-10 mt-4">
-          <div className="inline-block mb-3">
-            <span className="text-xs font-mono tracking-[0.3em] text-yellow-400 uppercase border border-yellow-400/40 px-3 py-1 rounded-full">
-              ◈ Community Token ◈
-            </span>
+        {/* Scanlines overlay */}
+        <div className="fixed inset-0 pointer-events-none" style={{
+          backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 2px, ${scanlineColor} 2px, ${scanlineColor} 4px)`,
+          zIndex: 1
+        }} aria-hidden="true" />
+
+        <div className="relative z-10 flex flex-col items-center px-4 py-12">
+          {/* Theme toggle */}
+          <div className="w-full flex justify-end mb-4">
+            <button
+              onClick={() => setTheme(isDark ? "light" : "dark")}
+              className="px-4 py-2 rounded-full text-xs font-mono uppercase tracking-[0.3em] transition-all"
+              style={{
+                background: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
+                color: isDark ? "#fff" : "#111",
+                border: `1px solid ${isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.12)"}`
+              }}
+              aria-label={`Switch to ${isDark ? 'light' : 'dark'} theme`}
+            >
+              {isDark ?
+                <span className="flex gap-3"><FaSun aria-hidden="true" /> light</span> :
+                <span className="flex gap-3"><FaMoon aria-hidden="true" /> dark</span>}
+            </button>
           </div>
 
-          <h1
-            className="text-6xl sm:text-8xl font-black uppercase tracking-tight leading-none mb-2 select-none"
-            style={{
-              fontFamily: "'Arial Black', sans-serif",
-              background: "linear-gradient(135deg, #FFD700 0%, #FF00FF 50%, #00FFFF 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              filter: glitch ? "blur(2px)" : "none",
-              transform: glitch ? "skewX(-5deg) translateX(4px)" : "none",
-              transition: "all 0.05s",
-            }}
-          >
-            mspaintify
-          </h1>
-
-          <p className={`font-mono text-sm tracking-widest uppercase ${isDark ? "text-yellow-400/70" : "text-slate-500"}`}>
-            generate · imagine · tokenize
-          </p>
-        </div>
-
-        {/* Token Address Strip */}
-        <div className="w-full max-w-2xl mb-8">
-          <div className="relative overflow-hidden rounded-2xl border" style={{ borderColor: isDark ? "rgba(255,215,0,0.3)" : "rgba(148,163,184,0.2)", background: isDark ? "rgba(255,215,0,0.05)" : "rgba(15,23,42,0.05)", }}>
-            <div className="flex items-center p-3 gap-3">
-              <span className={`font-mono text-xs uppercase tracking-widest shrink-0 ${isDark ? "text-yellow-400" : "text-slate-700"}`}>CA:</span>
-              <span className={`font-mono text-sm truncate ${isDark ? "text-white/80" : "text-slate-700"}`}>
-                HDmojpFZvf1F421Gev2hh2p1ThaVbWsW5qh9C5Bipump
+          {/* Header Section */}
+          <header className="text-center mb-10 mt-4">
+            <div className="inline-block mb-3">
+              <span className="text-xs font-mono tracking-[0.3em] text-yellow-400 uppercase border border-yellow-400/40 px-3 py-1 rounded-full">
+                ◈ Community Token ◈
               </span>
-              <button
-                onClick={() => navigator.clipboard.writeText("HDmojpFZvf1F421Gev2hh2p1ThaVbWsW5qh9C5Bipump")}
-                className="shrink-0 text-xs border px-2 py-1 rounded-lg transition-all font-mono"
-                style={{
-                  borderColor: isDark ? "rgba(255,215,0,0.4)" : "rgba(148,163,184,0.3)",
-                  color: isDark ? "#FFD700" : "#0f172a",
-                  background: isDark ? "rgba(255,215,0,0.1)" : "rgba(248,250,252,0.8)",
-                }}
-              >
-                copy
-              </button>
             </div>
-            <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-2xl" style={{ background: isDark ? "rgba(255,215,0,0.1)" : "rgba(34,197,94,0.08)" }} />
-          </div>
+
+            <h1
+              className="text-6xl sm:text-8xl font-black uppercase tracking-tight leading-none mb-2 select-none"
+              style={{
+                fontFamily: "'Arial Black', sans-serif",
+                background: "linear-gradient(135deg, #FFD700 0%, #FF00FF 50%, #00FFFF 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: glitch ? "blur(2px)" : "none",
+                transform: glitch ? "skewX(-5deg) translateX(4px)" : "none",
+                transition: "all 0.05s",
+              }}
+            >
+              mspaintify
+            </h1>
+
+            <p className={`font-mono text-sm tracking-widest uppercase ${isDark ? "text-yellow-400/70" : "text-slate-500"}`}>
+              generate · imagine · tokenize
+            </p>
+          </header>
+
+          {/* Token Information Section */}
+          <section className="w-full max-w-2xl mb-8" aria-labelledby="token-address">
+            <div
+              className="relative overflow-hidden rounded-2xl border"
+              style={{
+                borderColor: isDark ? "rgba(255,215,0,0.3)" : "rgba(148,163,184,0.2)",
+                background: isDark ? "rgba(255,215,0,0.05)" : "rgba(15,23,42,0.05)"
+              }}
+              itemScope
+              itemType="https://schema.org/CryptoCurrency"
+            >
+              <meta itemProp="name" content="MSPAINTIFY" />
+              <meta itemProp="description" content="Community token for AI image generation" />
+              <link itemProp="sameAs" href="https://solscan.io/token/HDmojpFZvf1F421Gev2hh2p1ThaVbWsW5qh9C5Bipump" />
+              <div className="flex items-center p-3 gap-3">
+                <span className={`font-mono text-xs uppercase tracking-widest shrink-0 ${isDark ? "text-yellow-400" : "text-slate-700"}`}>CA:</span>
+                <span
+                  className={`font-mono text-sm truncate ${isDark ? "text-white/80" : "text-slate-700"}`}
+                  id="token-address"
+                  aria-label="Token contract address"
+                  itemProp="identifier"
+                >
+                  HDmojpFZvf1F421Gev2hh2p1ThaVbWsW5qh9C5Bipump
+                </span>
+                <button
+                  onClick={() => navigator.clipboard.writeText("HDmojpFZvf1F421Gev2hh2p1ThaVbWsW5qh9C5Bipump")}
+                  className="shrink-0 text-xs border px-2 py-1 rounded-lg transition-all font-mono"
+                  style={{
+                    borderColor: isDark ? "rgba(255,215,0,0.4)" : "rgba(148,163,184,0.3)",
+                    color: isDark ? "#FFD700" : "#0f172a",
+                    background: isDark ? "rgba(255,215,0,0.1)" : "rgba(248,250,252,0.8)",
+                  }}
+                  aria-label="Copy token contract address to clipboard"
+                >
+                  copy
+                </button>
+              </div>
+              <div className="absolute -right-8 -top-8 w-24 h-24 rounded-full blur-2xl" style={{ background: isDark ? "rgba(255,215,0,0.1)" : "rgba(34,197,94,0.08)" }} aria-hidden="true" />
+            </div>
+          </section>
         </div>
 
         {/* Community Links */}
@@ -221,7 +257,7 @@ export default function Home() {
         </div>
 
         {/* Image Generator */}
-        <div className="w-full max-w-2xl">
+        <div className="w-full max-w-2xl m-auto">
           <div className="relative rounded-3xl border backdrop-blur-sm p-6 sm:p-8"
             style={{ boxShadow: "0 0 80px rgba(255,215,0,0.08), 0 0 200px rgba(255,0,255,0.05)", background: cardBg, borderColor: cardBorder }}>
             <div className="flex items-center gap-3 mb-6">
@@ -243,10 +279,8 @@ export default function Home() {
               <label
                 className="relative flex flex-col items-center justify-center w-full h-48 rounded-2xl gap-2 border-2 border-dashed cursor-pointer transition-all group"
                 style={{
-                  borderColor: dragActive ? "#A855F7" : "rgba(255,255,255,0.15)",
-                  background: dragActive
-                    ? "rgba(168,85,247,0.08)"
-                    : "rgba(255,255,255,0.03)",
+                  borderColor: "rgba(255,255,255,0.15)",
+                  background: "rgba(255,255,255,0.03)",
                 }}
               >
                 {/* Hidden Input */}
@@ -281,6 +315,7 @@ export default function Home() {
               {/* Preview */}
               {file && (
                 <div className="mt-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={URL.createObjectURL(file)}
                     alt="Preview"
@@ -356,18 +391,19 @@ export default function Home() {
         <div className="mt-16 text-center font-mono text-xs text-white/20 uppercase tracking-widest">
           <p>© 2025 MSPAINTIFY — Token, Generate paint like images with AI</p>
         </div>
-      </div>
+
+      </main >
 
       <style jsx global>{`
-        @keyframes gridMove {
-          0% { background-position: 0 0; }
-          100% { background-position: 60px 60px; }
-        }
-        @keyframes float {
-          from { transform: translateY(0px) scale(1); opacity: 0.4; }
-          to { transform: translateY(-20px) scale(1.2); opacity: 0.9; }
-        }
-      `}</style>
-    </main>
+      @keyframes gridMove {
+        0% { background-position: 0 0; }
+        100% { background-position: 60px 60px; }
+      }
+      @keyframes float {
+        from { transform: translateY(0px) scale(1); opacity: 0.4; }
+        to { transform: translateY(-20px) scale(1.2); opacity: 0.9; }
+      }
+    `}</style>
+    </>
   );
 }
