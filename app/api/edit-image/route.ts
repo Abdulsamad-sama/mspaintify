@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { rateLimit, getClientIP } from "@/lib/rateLimit";
 
 export const runtime = "nodejs"; // important for file handling
 
@@ -11,6 +12,24 @@ const FIXED_PROMPT = `Redraw the attached image in the most clumsy, scribbly, an
 
 export async function POST(req: NextRequest) {
   try {
+    // 🛡️ Rate limiting: 5 requests per minute per IP
+    const clientIP = getClientIP(req);
+    const rateLimitResult = rateLimit(clientIP, 5, 60000);
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please try again later." },
+        {
+          status: 429,
+          headers: {
+            "Retry-After": String(
+              Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+            ),
+          },
+        },
+      );
+    }
+
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
         { error: "OpenAI API key not configured" },
