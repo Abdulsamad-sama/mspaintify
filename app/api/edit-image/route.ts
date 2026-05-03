@@ -55,9 +55,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Convert File → Buffer
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    // Convert File → Buffer (for potential future use)
+    // const bytes = await file.arrayBuffer(); // Commented out - not currently used
 
     // 🧠 Image edit call
     const result = await client.images.edit({
@@ -78,10 +77,19 @@ export async function POST(req: NextRequest) {
       image: `data:image/png;base64,${imageBase64}`,
     });
   } catch (error: unknown) {
-    console.error("Image edit error:", error);
+    console.error("Image edit error:", {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
 
-    const message =
-      error instanceof Error ? error.message : "Image editing failed";
+    // Don't expose internal error details to client
+    const isDevelopment = process.env.NODE_ENV === "development";
+    const message = isDevelopment
+      ? error instanceof Error
+        ? error.message
+        : "Image editing failed"
+      : "Image editing failed. Please try again.";
 
     return NextResponse.json({ error: message }, { status: 500 });
   }

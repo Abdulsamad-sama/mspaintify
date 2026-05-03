@@ -56,7 +56,9 @@ npm run dev
 
 Open http://localhost:3000
 
-### 5. Deploy to Vercel (recommended)
+## Production Deployment
+
+### Vercel (Recommended)
 
 ```bash
 npm install -g vercel
@@ -64,6 +66,32 @@ vercel
 ```
 
 Add `OPENAI_API_KEY` in Vercel dashboard → Settings → Environment Variables
+
+### Docker Deployment
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Or build manually
+docker build -t mspaintify .
+docker run -p 3000:3000 -e OPENAI_API_KEY=your_key_here mspaintify
+```
+
+### Manual Server Deployment
+
+```bash
+npm run build
+npm start
+```
+
+### Health Check
+
+Visit `/api/health` to check if the application is running properly.
+
+### Environment Variables
+
+See `.env.example` for all available configuration options.
 
 ## Cost per image
 
